@@ -3,6 +3,7 @@ const server = express();
 const router = require('./router');
 
 server.set("view engine", "ejs");
+server.use(express.urlencoded());
 server.use(router);
 server.use(express.static("public"));
 
