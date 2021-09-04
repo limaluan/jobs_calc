@@ -32,7 +32,7 @@
           <img id="logo" src="/images/logo.svg" alt="Logo" />
           <span id="notification">
             <img src="/images/alert-octagon.svg" alt="Alerta" />
-            Você tem 2 horas livres no seu dia
+            Você <%= freeHours < 1 ? 'não' : '' %> tem <%= freeHours >= 1 ? freeHours : '' %> hora(s) livre(s) no seu dia
           </span>
           <a href="/profile" id="avatar-profile">
             <p><%= profile.name %>  <span>Ver perfil</span></p>
