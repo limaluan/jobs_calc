@@ -1,7 +1,6 @@
 module.exports = {
     remainingDays(job) {
         const createdAt = new Date(job.created_at);
-
         const estimatedDays = Math.floor((job['total-hours'] / job['daily-hours']));
         const dueDay = Number(estimatedDays) + createdAt.getDate();
         const dueDate = createdAt.setDate(dueDay);
@@ -10,6 +9,6 @@ module.exports = {
     },
     
     calculateBudget (profile_data, total_hours) {
-        return profile_data['value-hour'] * total_hours;
+        return profile_data['value-hour'] * Number(total_hours);
     }
 }

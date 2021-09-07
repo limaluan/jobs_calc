@@ -7,66 +7,70 @@ module.exports = {
         return res.render("job");
     },
 
-    save(req, res) {
-        const jobs = Job.get();
-        const lastId = jobs[Job.get().length - 1]?.id || 0;
+    async save(req, res) {
+        let job = {
+            name: req.body.name,
+            'daily-hours': req.body['daily-hours'],
+            'total-hours': req.body['total-hours'],
+            created_at: Date.now(),
+            budget: JobUtil.calculateBudget(await Profile.get(), req.body['total-hours']),
+        };
 
-        jobs.push(
-            {
-                id: lastId + 1,
-                name: req.body.name,
-                'daily-hours': req.body['daily-hours'],
-                'total-hours': req.body['total-hours'],
-                created_at: Date.now()
-            }
-        );
+        // adiciona o tempo restante eo status ao job antes de salva-lo
+        job = {
+            ...job,
+            remaining: JobUtil.remainingDays(job),
+            status: JobUtil.remainingDays(job) > 0 ? 'progress' : 'done'
+        }
 
-        Job.update([...jobs]);
+        await Job.save(job);
         return res.redirect("/");
     },
 
-    show(req, res) {
+    async show(req, res) {
         let id = req.params.id;
-        const jobs = Job.get();
+        const jobs = await Job.get();
 
-        const job = jobs.find(job => Number(job.id) === Number(id));
+        let job = jobs.find(job => Number(job.id) === Number(id));
         if (!job) {
             return res.send('Job Not Found!');
         }
 
-        res.render("job-edit", { job })
+        job = {
+            ...job,
+            remaining: JobUtil.remainingDays(job),
+            status: JobUtil.remainingDays(job) > 0 ? 'progress' : 'done',
+            budget: JobUtil.calculateBudget(await Profile.get(), job["total-hours"])
+        };
+
+        return res.render("job-edit", { job });
     },
 
-    update(req, res) {
+    async update(req, res) {
         const id = req.params.id;
-        const jobs = Job.get();
+        const jobs = await Job.get();
 
         let job = jobs.find(job => Number(job.id) === Number(id));
 
-        if (!job) return res.send("Parece que ocorreu um erro.");
-
-        let index = jobs.indexOf(job);
-
-        jobs[index] = ({
+        job = {
             ...job,
-            name: req.body.name,
             'daily-hours': req.body['daily-hours'],
             'total-hours': req.body['total-hours'],
-            budget: JobUtil.calculateBudget(Profile.get(), req.body['total-hours'])
-        });
-
-        Job.update([...jobs]);
-        console.log(Job.get())
+            name: req.body.name
+        }
+        await Job.update(job);
         res.redirect('/job/' + id);
     },
 
-    delete(req, res) {
+    async delete(req, res) {
         const id = req.params.id;
-        const
+        const jobs = await Job.get();
 
-            jobData = Job.get().filter(job => Number(job.id) !== Number(id))
-        Job.update([...jobData]);
+        jobs.filter(job => {
+            Number(job.id) === Number(id) ? Job.delete(job) : "Job não encontrado";
+        });
 
-        return res.redirect('/');
+        res.redirect('/');
+        
     }
 }
